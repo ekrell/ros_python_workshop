@@ -113,7 +113,7 @@ def main():
     startTime = time.time()
     iteration = 0
     # Give ROS a chance to start up
-    rospy.sleep (1)
+    rospy.sleep (100)
     # Init inf distance to goal 
     dist2Goal = float("inf")
 
@@ -148,7 +148,6 @@ def main():
         dy = pose['y'] - params["goal"][1]
         x1 = math.cos(pose["theta"]) * dx + math.sin(pose["theta"]) * dy 
         y1 = -1 * math.sin(pose["theta"]) * dx + math.cos(pose["theta"]) * dy
-
         if (x1 * x1 + y1 * y1) == 0:
             curv = 0
         else:
@@ -160,72 +159,11 @@ def main():
 
         # Send movement control to robot
         velctrl.write(params["linear_speed"], curv * params["linear_speed"])
+
         # Update iteration
         iteration = iteration + 1
-
-   
-
-def main_2 ():
-
-    ###########
-    # Options #
-    ###########
-
-    # Set initial distance to goal as max,
-    # since it is yet unmeasured.
-    # (Don't want it set to 0 since that would signal arrival)
-
-    waypoint = None
-
-    pathIdx = 0
-
-    # Counter for # times the main follower
-    # loop has iterated. Used to control how often the
-    # visualization/log messages display.
-    iterationCount = 0
-
-
-
-    # Start PurePursuit loop
-    while (halt == False):
-        rospy.sleep(0.05)
-        #print (odometry_pose)
-        velctrl.write(100, 100)
-###########
-        # PROCESS #
-        ###########
-
-        
-        #############
-        # VISUALIZE #
-        #############
-
-        visTime = time.time()
-        runTime = visTime - startTime
-        if (iterationCount % 100 == 0):
-            print ("")
-            #printPoseDict (worldPose)
-            print ("Robot position: (x: %d, y: %d, theta: %.3f)" \
-                % (worldPose["position"]["x"], worldPose["position"]["y"], theta))
-            print ("Next waypoint: (x: %d, y: %d, segment: %d)" \
-                % (targetPoint['x'], targetPoint['y'], pathIdx))
-            print ("Distance to: (waypoint: %.3f, goal: %.3f)" \
-                % (dist2target, dist2goal))
-            print ("Time traveled: %.3f s" \
-                % (runTime))
-            print ("")
-
-    ##########
-    # FINISH #
-    ##########
-    
-    # Halt robot
-    velctrl.write(0, 0)
-
-    endTime = time.time()
-    runTime = endTime - startTime
-    print ("Goal reached in: ", runTime, "seconds")
-
+        endTime = time.time()
+        runTime = endTime - startTime
 
 if __name__ == '__main__':
     main()
