@@ -85,6 +85,10 @@ def updateParams(params):
         params["linear_speed"] = rospy.get_param("linear_speed")
     if rospy.has_param("goal"):
         params["goal"] = rospy.get_param("goal")
+
+def status2str(pose, goal):
+    return "Position: (x:{}, y:{}, theta:{}), Goal: (x:{}, y:{})".format(pose["x"], 
+                                        pose["y"], pose["theta"], goal[0], goal[1])
    
 def main():
 
@@ -97,7 +101,7 @@ def main():
                "look_ahead"        : 1,
                "kp"                : 1.0,
                "l"                 : 2.9,
-               "linear_speed"      : 5,
+               "linear_speed"      : 1,
                "goal"              : (9, 9),
              }
     setParams(params)
@@ -107,15 +111,20 @@ def main():
     #########
 
     # Initialize ROS connections
+    rospy.loginfo("Setting up ROS connections..")
     velctrl = turtlebot_velocity()
-    sub = listener();
+    sub = listener()
+    rospy.loginfo("ROS connections established")
+    
     # Start timer (for logging, etc)
     startTime = time.time()
     iteration = 0
     # Give ROS a chance to start up
-    rospy.sleep (100)
+    rospy.sleep (10)  # Typical value is 1, but turtlesim_node is slow
     # Init inf distance to goal 
     dist2Goal = float("inf")
+
+    rospy.loginfo_throttle(10, status2str(pose, params["goal"]))
 
     # Start PurePursuit loop
     while (True):
@@ -124,6 +133,11 @@ def main():
         # Get updated parameters from parameter server
         if iteration % 100 == 0:
             updateParams(params)
+
+        # Update iteration
+        iteration = iteration + 1
+        endTime = time.time()
+        runTime = endTime - startTime
 
         #########
         # SENSE #
@@ -151,7 +165,7 @@ def main():
         if (x1 * x1 + y1 * y1) == 0:
             curv = 0
         else:
-            curv = (2.0 / (x1 * x1 + y1 * y1)) * (-1 * y1)
+            curv = (1.0 / (x1 * x1 + y1 * y1)) * (-1 * y1)
 
         ###########
         # CONTROL #
@@ -160,16 +174,14 @@ def main():
         # Send movement control to robot
         velctrl.write(params["linear_speed"], curv * params["linear_speed"])
 
-        # Update iteration
-        iteration = iteration + 1
-        endTime = time.time()
-        runTime = endTime - startTime
+        #############
+        # Visualize #
+        #############
+        
+        # handled by the invocation of rospy.loginfo_throttle
+        # view messages with rostopic echo /rosout
+
 
 if __name__ == '__main__':
     main()
-
-
-
-
-
 
